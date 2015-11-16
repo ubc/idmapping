@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+from idmap.plugin import Plugin
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -57,8 +59,7 @@ ROOT_URLCONF = 'idmap.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -107,7 +108,21 @@ STATIC_ROOT = BASE_DIR + '/volatile/static/'
 
 REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
     'PAGE_SIZE': 10
 }
 
+DEFAULT_VERSION = 'v0'
+
 HASH_SALT = os.environ.get('HASH_SALT')
+EDX_SERVER = os.environ.get('EDX_SERVER', 'http://localhost:8000')
+EDX_MAPPING_ENDPOINT = os.environ.get('EDX_MAPPING_ENDPOINT', '/api/third_party_auth/v0/providers/saml-ubc/users')
+EDX_ACCESS_TOKEN = os.environ.get('EDX_ACCESS_TOKEN')
+
+PLUGINS = [
+    'idm.plugins.providers.RemoteIdProvider',
+    'idm.plugins.providers.UserInfoProvider',
+    'idm.plugins.providers.EdxUsernameProvider',
+]
+
+Plugin.register(*PLUGINS)
