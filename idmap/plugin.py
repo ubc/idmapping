@@ -8,6 +8,7 @@ class Plugin(object):
     """
     name = 'Default Plugin'
     cost = 50
+    settings = {}
 
     # class __metaclass__(type):
     #
@@ -56,6 +57,9 @@ class Plugin(object):
     def get_provides(self):
         raise NotImplementedError
 
+    def load_settings(self):
+        pass
+
     def provides(self, field):
         return field in self.get_provides()
 
@@ -78,6 +82,9 @@ class Plugin(object):
                     return need
 
         return None
+
+    def load(self, **params):
+        self.load_settings()
 
     def __repr__(self):
         return self.name

@@ -126,3 +126,11 @@ PLUGINS = [
 ]
 
 Plugin.register(*PLUGINS)
+
+PROVIDER = {}
+
+for provider in Plugin.get_all_providers():
+    provider_name = type(provider).__name__
+    PROVIDER[provider_name] = {}
+    for key, default in provider.settings.iteritems():
+        PROVIDER[provider_name][key] = os.environ.get(key, default)

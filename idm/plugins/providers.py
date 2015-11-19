@@ -38,7 +38,30 @@ class RemoteIdProvider(Plugin):
         return [{'user_id': user_id, 'remote_id': hash_md5(user_id, settings.HASH_SALT)} for user_id in user_ids]
 
 
-class UserInfoProvider(Plugin):
+class MongoProvider(Plugin):
+    name = "Mongo Backend Provider"
+
+    settings = {'MONGO_HOST': 'localhost', 'MONGO_PORT': 27017, 'MONGO_DATABASE': 'test'}
+
+    def __init__(self):
+        self.client = None
+        self.db = None
+
+    def load_settings(self):
+        self.client = MongoClient(
+            settings.PROVIDER[type(self).__name__]['MONGO_HOST'],
+            settings.PROVIDER[type(self).__name__]['MONGO_PORT']
+        )
+        self.db = self.client[settings.PROVIDER[type(self).__name__]['MONGO_DATABASE']]
+
+    def get_needs(self):
+        raise NotImplementedError
+
+    def get_provides(self):
+        raise NotImplementedError
+
+
+class UserInfoProvider(MongoProvider):
     name = "UBC User Info Provider"
 
     def get_needs(self):
@@ -91,6 +114,7 @@ class UserInfoProvider(Plugin):
     #             if user_id in user_ids}
 
     def load(self, **params):
+        super(UserInfoProvider, self).load()
         field_mapping = {
             'user_id': 'ubcEduCwlPUID',
             'remote_id': 'edx_id',
@@ -99,15 +123,14 @@ class UserInfoProvider(Plugin):
         }
 
         # query mongo to get user info
-        client = MongoClient()
-        db = client.test
+
         condition = []
         for field in field_mapping.keys():
             values = params.get(field, [])
             if values:
                 condition.append({field_mapping[field]: {'$in': values}})
 
-        cursor = db.users.find({'$or': condition})
+        cursor = self.db.users.find({'$or': condition})
 
         users = []
         for result in cursor:
