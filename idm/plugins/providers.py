@@ -50,7 +50,7 @@ class MongoProvider(Plugin):
     def load_settings(self):
         self.client = MongoClient(
             settings.PROVIDER[type(self).__name__]['MONGO_HOST'],
-            settings.PROVIDER[type(self).__name__]['MONGO_PORT']
+            int(settings.PROVIDER[type(self).__name__]['MONGO_PORT'])
         )
         self.db = self.client[settings.PROVIDER[type(self).__name__]['MONGO_DATABASE']]
 

@@ -5,7 +5,7 @@ maintainer compass
 RUN apt-get update
 RUN apt-get install -y build-essential
 RUN apt-get install -y python python-dev python-setuptools
-RUN apt-get install -y nginx supervisor
+RUN apt-get install -y supervisor
 RUN easy_install pip
 
 # install uwsgi now because it takes a little while
@@ -27,6 +27,8 @@ ADD . /code/
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 RUN rm /etc/nginx/sites-enabled/default
 RUN ln -s /code/docker/nginx-app.conf /etc/nginx/sites-enabled/
+RUN rm -f /etc/supervisor/supervisord.conf
+RUN ln -s /code/docker/supervisord.conf /etc/supervisor/supervisord.conf
 RUN ln -s /code/docker/supervisor-app.conf /etc/supervisor/conf.d/
 
 # Collect static files
