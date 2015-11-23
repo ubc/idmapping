@@ -36,6 +36,20 @@ PROVIDER_A3 = make_provider('provider A3', provides=['a1', 'a3'], needs=['a3'])
 
 PROVIDER_A4 = make_provider('provider A4', provides=['a1', 'a2'])
 
+EDX_PROVIDER = make_provider(
+        'edx provider',
+        provides=['edx_username', 'remote_id'],
+        needs=['edx_username', 'remote_id'])
+USERINFO_PROVIDER = make_provider(
+        'user info provider',
+        provides=['user_id', 'first_name', 'last_name', 'email', 'remote_id', 'student_number', 'employee_number'],
+        needs=['user_id', 'remote_id', 'student_number', 'employee_number'])
+REMOTEID_PROVIDER = make_provider(
+        'remote_id provider',
+        provides=['user_id', 'remote_id'],
+        needs=['user_id'])
+ALL_REAL_PROVIDERS = [REMOTEID_PROVIDER, USERINFO_PROVIDER, EDX_PROVIDER]
+
 @ddt
 class UtilsTestCase(TestCase):
 
@@ -64,7 +78,9 @@ class UtilsTestCase(TestCase):
         ([PROVIDER1, PROVIDER2], ['a2', 'a3'], {'a2'}, {PROVIDER2}),
         ([PROVIDER1, PROVIDER2], ['a1', 'a3'], {'a1'}, {PROVIDER1, PROVIDER2}),
         ([PROVIDER3, PROVIDER4], ['a1', 'a2', 'a3', 'a4'], {'a3'}, {PROVIDER3, PROVIDER4}),
-        ([PROVIDER1, PROVIDER4, PROVIDER5], ['a1', 'a3', 'a4'], {'a1'}, {PROVIDER4, PROVIDER5})
+        ([PROVIDER1, PROVIDER4, PROVIDER5], ['a1', 'a3', 'a4'], {'a1'}, {PROVIDER4, PROVIDER5}),
+        (ALL_REAL_PROVIDERS, ['last_name', 'first_name', 'edx_username', 'user_id', 'email'], {'edx_username'},
+         {EDX_PROVIDER, USERINFO_PROVIDER})
 
         # ([PROVIDER1, PROVIDER2, PROVIDER3], ['a1', 'a3'], set(), {PROVIDER3}),
         # # select providers with total lowest cost

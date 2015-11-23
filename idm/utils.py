@@ -38,7 +38,6 @@ def _select_providers(provided_by, wants, given):
     provided_by_clone = copy_provided_by(provided_by)
     wants_clone = remove(wants, given)
     given_clone = set(given)
-    next_attr = None
     found = True
     while found:
         found = False
@@ -49,10 +48,10 @@ def _select_providers(provided_by, wants, given):
                 # already found the provider to provide this attr or the attr is not what we are interested in
                 continue
             if len(providers) != 1:
-                next_attr = attr
                 break
-            if not set(providers[0].get_needs()) - {attr}:
+            if not set(providers[0].get_needs()) - {attr} or providers[0] in selected_providers:
                 # can't use this provider as attr is the only attribute needed to query
+                # or the provider already selected
                 continue
 
             # select this provider because it is the only one providing this attr
@@ -60,11 +59,11 @@ def _select_providers(provided_by, wants, given):
             # update wants for newly selected provider
             wants_clone = remove(wants_clone, providers[0].get_provides())
             if not providers[0].can_load(given_clone):
-                wants_clone.append(providers[0].get_needs())
+                wants_clone.extend(providers[0].get_needs())
             else:
                 # add attributes that selected provider can provides to the given set
                 given_clone.update(set(providers[0].get_provides()) | {attr})
-            remove(wants_clone, attr)
+            wants_clone = remove(wants_clone, attr)
             if not wants_clone:
                 # found everything, returning...
                 return selected_providers
@@ -74,13 +73,18 @@ def _select_providers(provided_by, wants, given):
             found = True
             break
 
-    if provided_by_clone and next_attr:
+    best_path = None
+    for attr, providers in provided_by_clone.iteritems():
         # now we start from the attributes that have more than one providers, we start the search
         # we need to try all possible combinations to see which path gives the least providers
-        best_path = None
-        for provider in provided_by_clone[next_attr]:
+        if len(providers) <= 1:
+            continue
+
+        for provider in providers:
             new_provided_by = copy_provided_by(provided_by_clone)
-            new_provided_by[next_attr] = [provider]
+            # set the current provider as the only provider for the attribute. so it will get picked in
+            # next _select_providers
+            new_provided_by[attr] = [provider]
             new_provided_by = OrderedDict(sorted(new_provided_by.items(), key=lambda t: len(t[1])))
 
             try:
@@ -90,11 +94,12 @@ def _select_providers(provided_by, wants, given):
                 continue
             if current_path and (not best_path or calculate_total_cost(best_path) > calculate_total_cost(current_path)):
                 best_path = current_path
-        # no path found that can satisfy all attributes we want
-        if not best_path:
-            raise AttributeLoadingDependencyNotSatisfied('Could not satisfy the loading dependencies for attributes.')
-        # add the best result to selected_providers
-        selected_providers.update(best_path)
+
+    # no path found that can satisfy all attributes we want
+    if not best_path:
+        raise AttributeLoadingDependencyNotSatisfied('Could not satisfy the loading dependencies for attributes.')
+    # add the best result to selected_providers
+    selected_providers.update(best_path)
 
     return selected_providers
 
