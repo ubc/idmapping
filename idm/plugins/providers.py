@@ -65,10 +65,10 @@ class UserInfoProvider(MongoProvider):
     name = "UBC User Info Provider"
 
     def get_needs(self):
-        return ['user_id', 'remote_id', 'student_number', 'employee_number']
+        return ['user_id', 'cwl', 'remote_id', 'student_number', 'employee_number', 'email']
 
     def get_provides(self):
-        return ['user_id', 'first_name', 'last_name', 'email', 'remote_id',
+        return ['user_id', 'cwl', 'first_name', 'last_name', 'email', 'remote_id',
                 'student_number', 'employee_number']
 
     def get_user_id(self, user_dict):
@@ -76,11 +76,14 @@ class UserInfoProvider(MongoProvider):
         # return {user_id: user['ubcEduCwlPUID'] if 'ubcEduCwlPUID' in user else None
         #         for user_id, user in self.users.iteritems() if user_id in user_ids}
 
+    def get_cwl(self, user_dict):
+        return user_dict['uid']
+
     def get_first_name(self, user_dict):
-        return user_dict['displayName'].split(',')[1].strip() if 'displayName' in user_dict else None
+        return user_dict['cn'].split(' ')[0].strip() if 'cn' in user_dict else None
 
     def get_last_name(self, user_dict):
-        return user_dict['displayName'].split(',')[0].strip() if 'displayName' in user_dict else None
+        return user_dict['cn'].split(' ')[1].strip() if 'cn' in user_dict else None
 
     def get_remote_id(self, user_dict):
         return user_dict['edx_id']
@@ -119,7 +122,8 @@ class UserInfoProvider(MongoProvider):
             'user_id': 'ubcEduCwlPUID',
             'remote_id': 'edx_id',
             'student_number': 'ubcEduStudentNumber',
-            'employee_number': 'employeeNumber'
+            'employee_number': 'employeeNumber',
+            'email': 'mail',
         }
 
         # query mongo to get user info
@@ -130,11 +134,12 @@ class UserInfoProvider(MongoProvider):
             if values:
                 condition.append({field_mapping[field]: {'$in': values}})
 
-        cursor = self.db.users.find({'$or': condition})
-
         users = []
-        for result in cursor:
-            users.append({key: getattr(self, 'get_' + key)(result) for key in self.get_provides()})
+        if condition:
+            cursor = self.db.users.find({'$or': condition})
+
+            for result in cursor:
+                users.append({key: getattr(self, 'get_' + key)(result) for key in self.get_provides()})
 
         return users
 

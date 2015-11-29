@@ -32,7 +32,7 @@ class SingleMappingView(APIView):
         params = request.query_params
         users = []
         retrieved_fields = []
-        key_names = ['user_id', 'edx_username']
+        key_names = ['user_id', 'edx_username', 'email']
         wants = params.getlist('wants', ['user_id'])
         for key_name in key_names:
             if key_name not in params:
