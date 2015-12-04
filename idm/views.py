@@ -55,3 +55,14 @@ class SingleMappingView(APIView):
                  for user in users]
 
         return Response(users)
+
+
+class AttributeView(APIView):
+    def get(self, request, format=None):
+        needs = set()
+        provides = set()
+        for provider in Plugin.get_all_providers():
+            needs.update(provider.get_needs())
+            provides.update(provider.get_provides())
+
+        return Response({'needs': needs, 'provides': provides})
