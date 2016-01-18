@@ -8,6 +8,67 @@ class AttributeLoadingDependencyNotSatisfied(RuntimeError):
     pass
 
 
+class LogicalOperator(list):
+    def __init__(self, operator='or', elements=None):
+        super(LogicalOperator, self).__init__(elements)
+        self.operator = operator
+
+    def add(self, elements):
+        if isinstance(elements, six.string_types) or isinstance(elements, LogicalOperator):
+            self.append(elements)
+        else:
+            self.extend(elements)
+
+    def op_remove(self, elements):
+        if isinstance(elements, six.string_types):
+            elements = [elements]
+        for e in self[:]:
+            if isinstance(e, six.string_types):
+                # an attribute
+                if e in elements:
+                    if self.operator == 'or':
+                        del self[:]
+                        return
+                    else:
+                        self.remove(e)
+            else:
+                # it's an operator
+                e.op_remove(elements)
+                if not len(e):
+                    self.remove(e)
+
+    def eval(self, values):
+        if self.operator == 'or':
+            for e in self:
+                if isinstance(e, six.string_types):
+                    if e in values:
+                        return True
+                else:
+                    if e.eval(values):
+                        return True
+            return False
+        else:
+            # 'and' operator
+            for e in self:
+                if isinstance(e, six.string_types):
+                    if e not in values:
+                        return False
+                else:
+                    if not e.eval(values):
+                        return False
+            return True
+
+
+def and_(elements):
+    """ Factory method to create an AND operator """
+    return LogicalOperator('and', elements)
+
+
+def or_(elements):
+    """ Factory method to create an OR operator """
+    return LogicalOperator('or', elements)
+
+
 def copy_provided_by(provided_by):
     new_provided_by = OrderedDict()
     for key in provided_by.keys():
@@ -36,7 +97,8 @@ def remove(origin, elements):
 def _select_providers(provided_by, wants, given):
     selected_providers = set()
     provided_by_clone = copy_provided_by(provided_by)
-    wants_clone = remove(wants, given)
+    wants_clone = copy.deepcopy(wants)
+    wants_clone.op_remove(given)
     given_clone = set(given)
     found = True
     while found:
@@ -57,13 +119,17 @@ def _select_providers(provided_by, wants, given):
             # select this provider because it is the only one providing this attr
             selected_providers.add(providers[0])
             # update wants for newly selected provider
-            wants_clone = remove(wants_clone, providers[0].get_provides())
+            wants_clone.op_remove(providers[0].get_provides())
             if not providers[0].can_load(given_clone):
-                wants_clone.extend(providers[0].get_needs())
+                needs = or_(providers[0].get_needs())
+                try:
+                    needs.remove(attr)
+                except ValueError:
+                    pass
+                wants_clone.add(needs)
             else:
                 # add attributes that selected provider can provides to the given set
                 given_clone.update(set(providers[0].get_provides()) | {attr})
-            wants_clone = remove(wants_clone, attr)
             if not wants_clone:
                 # found everything, returning...
                 return selected_providers
@@ -133,7 +199,7 @@ def select_providers(providers, wants, given):
     provided_by = OrderedDict(sorted(provided_by.items(), key=lambda t: len(t[1])))
 
     try:
-        best_providers = _select_providers(provided_by, wants, frozenset(given))
+        best_providers = _select_providers(provided_by, and_(wants), frozenset(given))
     except AttributeLoadingDependencyNotSatisfied as e:
         e.message = e.message + ' Given attributes {}'.format(','.join(given))
         raise e
@@ -142,6 +208,22 @@ def select_providers(providers, wants, given):
 
 
 def sort_by_dependencies(providers, given):
+    """
+    Sort providers by their dependencies.
+
+    The ones that can be queried by the given attributes will be at the
+    beginning of the list
+
+    Args:
+        providers (set(Plugins)): set of providers to be sorted
+        given (list[string]): the attributes given
+
+    Returns:
+        (list): sorted providers
+
+    Raises:
+        RuntimeError: when any of the provider dependency is not satisfied
+    """
     given_clone = copy.copy(given)
     providers_clone = copy.copy(providers)
     sorted_providers = []

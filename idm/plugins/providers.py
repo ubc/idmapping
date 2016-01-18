@@ -1,44 +1,44 @@
-import hashlib
-import urllib2
 import json
 import logging
+import urllib2
 from urlparse import urljoin
+
 from django.conf import settings
 from django.http import QueryDict
 from pymongo import MongoClient
 
-from idmap.plugin import Plugin
+from idm.plugins.manager import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 
-def hash_md5(local_id, salt):
-    return hashlib.md5(local_id + salt).hexdigest()
+# def hash_md5(local_id, salt):
+#     return hashlib.md5(local_id + salt).hexdigest()
 
 
-class RemoteIdProvider(Plugin):
-    name = 'Remote Id Provider'
+# class RemoteIdProvider(BaseProvider):
+#     name = 'Remote Id Provider'
+#
+#     def get_needs(self):
+#         return ['user_id']
+#
+#     def get_provides(self):
+#         return ['user_id', 'remote_id']
+#
+#     def get_remote_id(self, user_ids):
+#         ret = {}
+#         for user_id in user_ids:
+#             ret[user_id] = hash_md5(user_id, settings.HASH_SALT)
+#
+#         return ret
+#
+#     def load(self, **params):
+#         user_ids = params.get('user_id', [])
+#
+#         return [{'user_id': user_id, 'remote_id': hash_md5(user_id, settings.HASH_SALT)} for user_id in user_ids]
 
-    def get_needs(self):
-        return ['user_id']
 
-    def get_provides(self):
-        return ['user_id', 'remote_id']
-
-    def get_remote_id(self, user_ids):
-        ret = {}
-        for user_id in user_ids:
-            ret[user_id] = hash_md5(user_id, settings.HASH_SALT)
-
-        return ret
-
-    def load(self, **params):
-        user_ids = params.get('user_id', [])
-
-        return [{'user_id': user_id, 'remote_id': hash_md5(user_id, settings.HASH_SALT)} for user_id in user_ids]
-
-
-class MongoProvider(Plugin):
+class MongoProvider(BaseProvider):
     name = "Mongo Backend Provider"
 
     settings = {'MONGO_HOST': 'localhost', 'MONGO_PORT': 27017, 'MONGO_DATABASE': 'test'}
@@ -53,12 +53,6 @@ class MongoProvider(Plugin):
             int(settings.PROVIDER[type(self).__name__]['MONGO_PORT'])
         )
         self.db = self.client[settings.PROVIDER[type(self).__name__]['MONGO_DATABASE']]
-
-    def get_needs(self):
-        raise NotImplementedError
-
-    def get_provides(self):
-        raise NotImplementedError
 
 
 class UserInfoProvider(MongoProvider):
@@ -127,7 +121,6 @@ class UserInfoProvider(MongoProvider):
         }
 
         # query mongo to get user info
-
         condition = []
         for field in field_mapping.keys():
             values = params.get(field, [])
@@ -144,7 +137,7 @@ class UserInfoProvider(MongoProvider):
         return users
 
 
-class EdxUsernameProvider(Plugin):
+class EdxUsernameProvider(BaseProvider):
     name = "Edx Username Provider"
     # this is cached between requests. may not be what we want.
 

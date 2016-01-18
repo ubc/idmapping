@@ -1,3 +1,6 @@
 .idea
 db.sqlite3
 *.pyc
+.coverage
+node_modules
+logs/*

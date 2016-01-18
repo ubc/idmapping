@@ -3,8 +3,8 @@ from unittest import TestCase
 from ddt import ddt, data, unpack
 from mock import Mock
 
-from idm.utils import _select_providers, select_providers, remove
-from idmap.plugin import Plugin
+from idm.plugins.manager import BaseProvider
+from idm.utils import select_providers, remove, and_, or_
 
 
 def make_provider(name, needs=None, provides=None, cost=50):
@@ -12,7 +12,7 @@ def make_provider(name, needs=None, provides=None, cost=50):
         needs = []
     if not provides:
         provides = []
-    provider = Plugin()
+    provider = BaseProvider()
     provider.name = name
     provider.get_provides = Mock(return_value=provides)
     provider.get_needs = Mock(return_value=needs)
@@ -44,11 +44,12 @@ USERINFO_PROVIDER = make_provider(
         'user info provider',
         provides=['user_id', 'first_name', 'last_name', 'email', 'remote_id', 'student_number', 'employee_number'],
         needs=['user_id', 'remote_id', 'student_number', 'employee_number'])
-REMOTEID_PROVIDER = make_provider(
-        'remote_id provider',
-        provides=['user_id', 'remote_id'],
-        needs=['user_id'])
-ALL_REAL_PROVIDERS = [REMOTEID_PROVIDER, USERINFO_PROVIDER, EDX_PROVIDER]
+# REMOTEID_PROVIDER = make_provider(
+#         'remote_id provider',
+#         provides=['user_id', 'remote_id'],
+#         needs=['user_id'])
+ALL_REAL_PROVIDERS = [USERINFO_PROVIDER, EDX_PROVIDER]
+
 
 @ddt
 class UtilsTestCase(TestCase):
@@ -94,7 +95,6 @@ class UtilsTestCase(TestCase):
         actual = select_providers(providers, wants, given)
         self.assertSetEqual(actual, expected)
 
-
     @data(
         (['a'], 'a', []),
         (['a'], 'b', ['a']),
@@ -108,3 +108,41 @@ class UtilsTestCase(TestCase):
     def test_remove(self, origin, elements, expect):
         actual = remove(origin, elements)
         self.assertListEqual(actual, expect)
+
+    @data(
+        (and_([]), 'a', ['a']),
+        (and_([]), ['a', 'b'], ['a', 'b']),
+        (and_([]), or_(['a']), [or_('a')]),
+    )
+    @unpack
+    def test_op_add(self, op, elements, expected):
+        op.add(elements)
+        self.assertItemsEqual(expected, op)
+
+    @data(
+        (and_(['a', 'b', 'c']), 'b', ['a', 'c']),
+        (and_(['a', 'b', 'c', 'd']), ['b', 'c'], ['a', 'd']),
+        (or_(['a', 'b', 'c']), 'b', []),
+    )
+    @unpack
+    def test_op_remove(self, op, elements, expected):
+        op.op_remove(elements)
+        self.assertItemsEqual(expected, op)
+
+    @data(
+        (and_(['a', 'b']), ['a', 'b'], True),
+        (and_(['a', 'b']), ['a'], False),
+        (and_(['a', 'b', or_(['c', 'd'])]), ['a', 'b', 'c'], True),
+        (and_(['a', 'b', or_(['c', 'd'])]), ['a', 'b', 'd'], True),
+        (and_(['a', 'b', or_(['c', 'd'])]), ['a', 'c', 'd'], False),
+        (or_(['a', 'b']), ['a', 'b'], True),
+        (or_(['a', 'b']), ['a'], True),
+        (or_(['a', 'b', or_(['c', 'd'])]), ['a'], True),
+        (or_(['a', 'b', or_(['c', 'd'])]), ['c'], True),
+        (or_(['a', 'b', or_(['c', 'd'])]), ['e'], False),
+        (or_(['a', 'b', and_(['c', 'd'])]), ['c'], False),
+        (or_(['a', 'b', and_(['c', 'd'])]), ['c', 'd'], True),
+    )
+    @unpack
+    def test_operator_eval(self, op, values, result):
+        self.assertEqual(op.eval(values), result)

@@ -1,0 +1,11 @@
+-r test.txt
+
+# Debug tools
+#django-debug-panel==0.8.1
+#django-debug-toolbar==1.4
+#django-pdb==0.4.2
+#sqlparse==0.1.10
+
+# runserver_plus
+django-extensions==1.5.9
+Werkzeug==0.11.2

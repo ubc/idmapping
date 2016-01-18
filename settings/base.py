@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-from idmap.plugin import Plugin
+from idm.plugins.manager import PluginManager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -41,6 +41,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'idm',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_swagger',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -108,11 +111,44 @@ STATIC_ROOT = BASE_DIR + '/volatile/static/'
 
 REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
     'PAGE_SIZE': 10
 }
 
 DEFAULT_VERSION = 'v0'
+
+SWAGGER_SETTINGS = {
+    'exclude_namespaces': [],
+    'api_version': DEFAULT_VERSION,
+    'api_path': '/api',
+    'enabled_methods': [
+        'get',
+        'post',
+        'put',
+        'patch',
+        'delete'
+    ],
+    'api_key': '',
+    'is_authenticated': True,
+    'is_superuser': False,
+    'permission_denied_handler': None,
+    'resource_access_handler': None,
+    # 'base_path': 'localhost:8080/docs',
+    'info': {
+        'contact': 'pan.luo@ubc.ca',
+        'description': 'This is a sample Identity Detective server. ',
+        'license': 'Apache 2.0',
+        'licenseUrl': 'http://www.apache.org/licenses/LICENSE-2.0.html',
+        # 'termsOfServiceUrl': 'http://helloreverb.com/terms/',
+        'title': 'Identity Detective',
+    },
+    'doc_expansion': 'none',
+}
 
 HASH_SALT = os.environ.get('HASH_SALT')
 EDX_SERVER = os.environ.get('EDX_SERVER', 'http://localhost:8000')
@@ -120,16 +156,16 @@ EDX_MAPPING_ENDPOINT = os.environ.get('EDX_MAPPING_ENDPOINT', '/api/third_party_
 EDX_ACCESS_TOKEN = os.environ.get('EDX_ACCESS_TOKEN')
 
 PLUGINS = [
-    'idm.plugins.providers.RemoteIdProvider',
+    # 'idm.plugins.providers.RemoteIdProvider',
     'idm.plugins.providers.UserInfoProvider',
     'idm.plugins.providers.EdxUsernameProvider',
 ]
 
-Plugin.register(*PLUGINS)
+PluginManager.register(*PLUGINS)
 
 PROVIDER = {}
 
-for provider in Plugin.get_all_providers():
+for provider in PluginManager.get_all_providers():
     provider_name = type(provider).__name__
     PROVIDER[provider_name] = {}
     for key, default in provider.settings.iteritems():

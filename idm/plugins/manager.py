@@ -2,14 +2,7 @@ from django.utils import six
 from django.utils.module_loading import import_string
 
 
-class Plugin(object):
-    """
-    Plugin base class
-    """
-    name = 'Default Plugin'
-    cost = 50
-    settings = {}
-
+class PluginManager(object):
     # class __metaclass__(type):
     #
     #     def __init__(cls, name, base, attrs, what):
@@ -36,17 +29,42 @@ class Plugin(object):
             # if fid:
             #     fid.close()
 
-    @classmethod
-    def find_provider(cls, field):
-        for plugin in cls.registered:
-            if plugin.provides(field):
-                return plugin
-
-        return None
+    # @classmethod
+    # def find_provider(cls, field):
+    #     for plugin in cls.registered:
+    #         if plugin.provides(field):
+    #             return plugin
+    #
+    #     return None
 
     @classmethod
     def get_all_providers(cls):
         return cls.registered
+
+    @classmethod
+    def get_all_needs(cls):
+        needs = set()
+        for provider in cls.registered:
+            needs.update(provider.get_needs())
+
+        return needs
+
+    @classmethod
+    def get_all_keys(cls):
+        keys = set()
+        for provider in cls.registered:
+            keys.update(provider.get_keys())
+
+        return keys
+
+
+class BaseProvider(object):
+    """
+    Provider base class
+    """
+    name = 'Default Plugin'
+    cost = 50
+    settings = {}
 
     def get_cost(self):
         return self.cost
@@ -56,6 +74,9 @@ class Plugin(object):
 
     def get_provides(self):
         raise NotImplementedError
+
+    def get_keys(self):
+        return self.get_needs()
 
     def load_settings(self):
         pass
