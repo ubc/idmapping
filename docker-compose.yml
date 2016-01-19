@@ -1,6 +1,16 @@
 web:
   build: .
   ports:
-   - "3000:80"
+   - "8000:80"
   environment:
    - HASH_SALT=123456
+   - DJANGO_SETTINGS_MODULE=settings.dev
+   - EDX_MAPPING_ENDPOINT=/api/third_party_auth/v0/providers/saml-ubc-edge/users
+   - MONGO_DATABASE=iam
+   - EDX_ACCESS_TOKEN=TOKEN
+   - EDX_SERVER=https://edge.edx.org
+   - DEBUG=True
+  links:
+   - db
+db:
+  image: mongo

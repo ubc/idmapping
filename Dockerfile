@@ -18,9 +18,9 @@ RUN apt-get install -y nginx
 
 # install our code and requirement
 RUN mkdir /code
-ADD requirements.txt /code/
+ADD requirements /code/requirements
 WORKDIR /code
-RUN pip install -r requirements.txt
+RUN pip install -r requirements/dev.txt
 ADD . /code/
 
 # setup all the config files
