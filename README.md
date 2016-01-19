@@ -18,7 +18,7 @@ What did just happen:
 
 #### Initialize Database
 ```
-docker exec -it idmapping_db_1 python manage.py migrate
+docker exec -it idmapping_web_1 python manage.py migrate
 ```
 
 #### Create Superuser
