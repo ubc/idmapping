@@ -18,18 +18,18 @@ What did just happen:
 
 #### Initialize Database
 ```
-docker exec -it idmap_web_1 python manage.py migrate
+docker exec -it idmapping_db_1 python manage.py migrate
 ```
 
 #### Create Superuser
 ```
-docker exec -it idmap_web_1 python manage.py createsuperuser
+docker exec -it idmapping_web_1 python manage.py createsuperuser
 ```
 Follow the prompt to enter the admin info.
 
 #### Connect to Mongo instance
 ```
-docker exec -it idmap_db_1 mongo
+docker exec -it idmapping_db_1 mongo
 ```
 #### Load Fixtures
 ```
