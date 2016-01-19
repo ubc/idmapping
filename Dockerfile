@@ -31,6 +31,14 @@ RUN rm -f /etc/supervisor/supervisord.conf
 RUN ln -s /code/docker/supervisord.conf /etc/supervisor/supervisord.conf
 RUN ln -s /code/docker/supervisor-app.conf /etc/supervisor/conf.d/
 
+# Create log dir/file
+RUN mkdir -p logs
+RUN touch logs/apps_info.log
+RUN touch logs/apps_debug.log
+RUN touch logs/trace.log
+RUN touch logs/events.log
+RUN touch logs/errors.log
+
 # Collect static files
 RUN mkdir -p /code/volatile/static
 RUN python manage.py collectstatic --noinput
