@@ -8,13 +8,18 @@ Development
 * Install [Docker Toolbox](https://www.docker.com/toolbox)
 * Run
 ```
-docker-composer up
+docker-compose up
 ```
 
-What did just happen:
-* Docker downloaded necessary files to build two images: web and db
+What just happened:
+* Docker downloaded the necessary files to build two images: web and db
 * Docker booted up one container for each image and set up a link between them so that web can talk to db
 * Docker forwarded web container port 80 to host port 8000 so it can be accessed from outside
+
+### Connect Docker to the 'default' machine
+```
+eval "$(docker-machine env default)"
+```
 
 #### Initialize Database
 ```
@@ -40,7 +45,7 @@ db.users.insert({"ubcEduCwlPUID" : "XXXXXXXXXXXX", "displayName" : "Smith, John"
 Insert more data as needed.
 
 #### Get Docker Host IP
-To access backend, you need the host IP. Replace `default` with the machine name is you are using custom machine name.
+To access backend, you need the host IP. Replace `default` with the machine name if you are using custom machine name.
 ```
 docker-machine ip default
 ```
