@@ -11,7 +11,9 @@ from idm.plugins.providers import MongoProvider, UserInfoProvider, EdxUsernamePr
 
 class MongoProviderTest(unittest.TestCase):
     @override_settings(
-        PROVIDER={'MongoProvider': {'MONGO_HOST': 'localhost', 'MONGO_PORT': 27017, 'MONGO_DATABASE': 'test'}}
+        PROVIDER={'MongoProvider': {
+            'MONGO_HOST': 'localhost:27017', 'MONGO_DATABASE': 'test', 'MONGO_USER': None, 'MONGO_PASS': None
+        }}
     )
     def test_load(self):
         provider = MongoProvider()
@@ -52,7 +54,7 @@ class UserInfoProviderTest(unittest.TestCase):
         provider = UserInfoProvider()
         users = provider.load(**load_params)
 
-        mock_client.assert_called_once_with('localhost', 27017)
+        mock_client.assert_called_once_with('localhost:27017')
         mock_db.users.find.assert_called_once_with(condition)
         self.assertListEqual(users, expect_users)
 

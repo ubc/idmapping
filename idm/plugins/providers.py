@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class MongoProvider(BaseProvider):
     name = "Mongo Backend Provider"
 
-    settings = {'MONGO_HOST': 'localhost', 'MONGO_PORT': 27017, 'MONGO_DATABASE': 'test'}
+    settings = {'MONGO_HOST': 'localhost:27017', 'MONGO_DATABASE': 'test', 'MONGO_USER': None, 'MONGO_PASS': None}
 
     def __init__(self):
         self.client = None
@@ -50,9 +50,13 @@ class MongoProvider(BaseProvider):
     def load_settings(self):
         self.client = MongoClient(
             settings.PROVIDER[type(self).__name__]['MONGO_HOST'],
-            int(settings.PROVIDER[type(self).__name__]['MONGO_PORT'])
         )
         self.db = self.client[settings.PROVIDER[type(self).__name__]['MONGO_DATABASE']]
+
+        user = settings.PROVIDER[type(self).__name__]['MONGO_USER']
+        password = settings.PROVIDER[type(self).__name__]['MONGO_PASS']
+        if user:
+            self.db.authenticate(user, password, source='admin')
 
 
 class UserInfoProvider(MongoProvider):
