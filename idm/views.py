@@ -2,9 +2,12 @@ import logging
 from collections import defaultdict
 from itertools import chain
 
+from rest_framework import schemas
+from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
 
 from idm.plugins.manager import PluginManager
 from idm.utils import select_providers, sort_by_dependencies, merge_dicts
@@ -103,3 +106,10 @@ class AttributeView(APIView):
             provides.update(provider.get_provides())
 
         return Response({'needs': needs, 'provides': provides})
+
+
+@api_view()
+@renderer_classes([OpenAPIRenderer, SwaggerUIRenderer])
+def schema_view(request):
+    generator = schemas.SchemaGenerator(title='IDMapping API')
+    return Response(generator.get_schema(request=request))
