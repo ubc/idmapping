@@ -1,7 +1,7 @@
 # Inherit from base settings
 from .base import *  # pylint:disable=W0614,W0401
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 LOGGING = {
     'version': 1,
