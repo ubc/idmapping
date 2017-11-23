@@ -5,12 +5,10 @@ from urlparse import urljoin
 
 from django.conf import settings
 from django.http import QueryDict
-from pymongo import MongoClient
 
 from idm.plugins.manager import BaseProvider
 
 logger = logging.getLogger(__name__)
-
 
 # def hash_md5(local_id, salt):
 #     return hashlib.md5(local_id + salt).hexdigest()
@@ -48,15 +46,9 @@ class MongoProvider(BaseProvider):
         self.db = None
 
     def load_settings(self):
-        self.client = MongoClient(
-            settings.PROVIDER[type(self).__name__]['MONGO_HOST'],
-        )
-        self.db = self.client[settings.PROVIDER[type(self).__name__]['MONGO_DATABASE']]
-
-        user = settings.PROVIDER[type(self).__name__]['MONGO_USER']
-        password = settings.PROVIDER[type(self).__name__]['MONGO_PASS']
-        if user:
-            self.db.authenticate(user, password, source='admin')
+        from mongo import mongo_client, mongo_db
+        self.client = mongo_client
+        self.db = mongo_db
 
 
 class UserInfoProvider(MongoProvider):

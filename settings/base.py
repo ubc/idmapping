@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+import datetime
+
 from idm.plugins.manager import PluginManager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,7 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'idm',
+    'idm.apps.IdmConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
@@ -112,8 +114,11 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR + '/volatile/static/'
 
 REST_FRAMEWORK = {
-    # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
@@ -152,6 +157,10 @@ SWAGGER_SETTINGS = {
         'title': 'Identity Detective',
     },
     'doc_expansion': 'none',
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=7200),
 }
 
 HASH_SALT = os.environ.get('HASH_SALT')
