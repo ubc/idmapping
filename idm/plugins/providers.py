@@ -158,7 +158,7 @@ class EdxUsernameProvider(BaseProvider):
         if not query.urlencode():
             # nothing to query
             return []
-        headers = {'Authorization': 'Bearer {}'.format(settings.EDX_ACCESS_TOKEN)}
+        headers = {'Authorization': 'JWT {}'.format(settings.EDX_ACCESS_TOKEN)}
         url = urljoin(settings.EDX_SERVER, settings.EDX_MAPPING_ENDPOINT)
         req = urllib2.Request(url + '?' + query.urlencode(), None, headers)
         try:
