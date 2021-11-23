@@ -56,3 +56,14 @@ If everything runs well, the backend will be available at `http://DOCKER_HOST_IP
 curl -u ADMIN_USERNAME:ADMIN_PASSWORD http://DOCKER_HOST_IP:8000/api/attribute
 ```
 It should return a json array with all available attributes.
+
+#### Run the script
+
+```
+# For Node 17 and above
+node --dns-result-order=ipv4first map.js -t TOKEN SOURCE.csv > mapped.csv
+
+# For Node 16 and below
+./map.js -t TOKEN SOURCE.csv > mapped.csv
+
+```
