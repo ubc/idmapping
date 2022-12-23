@@ -19,7 +19,7 @@ program
     .option('-E, --no-email', 'No email mapping', Boolean, false)
     .option('-b, --buffer-size [n]', 'Buffer size', parseInt, 10)
     .option('-t, --token [token]', 'Authentication token')
-    .option('-u, --url [baseURL]', 'Base URL for IDMapping', 'http://localhost:8080/api/map')
+    .option('-u, --url [baseURL]', 'Base URL for IDMapping', 'http://127.0.0.1:8000/api/map')
     .arguments('<csv_file>')
     .parse(process.argv);
 

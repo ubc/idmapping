@@ -158,9 +158,14 @@ class EdxUsernameProvider(BaseProvider):
         if not query.urlencode():
             # nothing to query
             return []
-        headers = {'Authorization': 'JWT {}'.format(settings.EDX_ACCESS_TOKEN)}
+        # edx is checking User-Agent, default urllib UA will result "forbidden" error
+        headers = {'Authorization': 'JWT {}'.format(settings.EDX_ACCESS_TOKEN),
+                   'Accept': '*/*', 'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)'}
         url = urljoin(settings.EDX_SERVER, settings.EDX_MAPPING_ENDPOINT)
         req = urllib2.Request(url + '?' + query.urlencode(), None, headers)
+        # handler = urllib2.HTTPSHandler(debuglevel=1)
+        # opener = urllib2.build_opener(handler)
+        # urllib2.install_opener(opener)
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError as e:
